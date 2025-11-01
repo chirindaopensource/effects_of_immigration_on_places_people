@@ -1,0 +1,224 @@
+﻿# ==============================================================================
+# Master Configuration for the Dustmann et al. (2025) Replication Pipeline
+# ==============================================================================
+
+study_metadata:
+  study_name: "The Effects of Immigration on Places and People – Identification and Interpretation"
+  authors:
+    - "Dustmann, C."
+    - "Otten, S."
+    - "Schönberg, U."
+    - "Stuhler, J."
+  version: "August 2025"
+
+temporal_parameters:
+  # Source: Section 3.2 ("Data and Samples")
+  DATA_ACQUISITION_START_YEAR: 1986
+  DATA_ACQUISITION_END_YEAR: 1995
+  # Annual snapshot date for all years t
+  ANNUAL_SNAPSHOT_MONTH: 6
+  ANNUAL_SNAPSHOT_DAY: 30
+  # Core timing
+  BASE_YEAR: 1990 # last pre-treatment year and baseline for weights
+  MATCHING_YEAR: 1989 # year used in matching treated to control districts
+  TREATMENT_START_YEAR: 1991 # first post-treatment event year
+  # Event-study windows
+  POST_TREATMENT_YEARS: [1991, 1992, 1993, 1994, 1995]
+  PRE_TREATMENT_YEARS_FOR_TESTING: [1987, 1988, 1989]
+  # Shock definition (main specification)
+  SHOCK_DEFINITION_START_YEAR: 1990
+  SHOCK_DEFINITION_END_YEAR: 1992
+  # Explicit event-study regressor convention (per paper):
+  # For 1991, use inflow 1990–1991; for 1992–1995, use inflow 1990–1992
+  EVENT_STUDY_SHOCK_RULES:
+    1991:
+      start_year: 1990
+      end_year: 1991
+    1992_to_1995:
+      start_year: 1990
+      end_year: 1992
+  # Baseline year for municipality weights
+  BASELINE_WEIGHT_YEAR: 1990
+
+sample_selection_parameters:
+  # Inclusion criteria
+  WORKER_AGE_MIN: 16
+  WORKER_AGE_MAX: 65
+  # Exclude irregular/marginal/seasonal for main analysis
+  EXCLUDED_EMPLOYMENT_TYPE_CODES: [2, 3, 4]
+  # Wage analysis: full-time only
+  WAGE_ANALYSIS_EMPLOYMENT_CODES: [1]
+  # Age threshold for older worker heterogeneity analysis
+  OLDER_WORKER_AGE_THRESHOLD: 50
+  # Non-employed at baseline (1990) window for last prior job
+  NON_EMPLOYED_LOOKBACK_START_YEAR: 1986
+  NON_EMPLOYED_LOOKBACK_END_YEAR: 1989
+  # Snapshot employment status rule (deterministic, to avoid ambiguity)
+  EMPLOYMENT_STATUS_AT_SNAPSHOT_RULE: "Start_Date <= snapshot_date <= End_Date"
+  # If multiple active spells at snapshot, choose main job deterministically
+  MAIN_JOB_TIE_BREAK_RULE: "highest_Daily_Wage_EUR_then_longest_spell"
+  # Non-employed in 1990 definition (for entrants module)
+  NON_EMPLOYED_1990_DEFINITION: "no active spell on snapshot_date_1990"
+
+algorithm_config_parameters:
+  # Wild bootstrap inference
+  BOOTSTRAP_REPLICATIONS: 500
+  WILD_BOOTSTRAP_TYPE: "Rademacher"
+  BOOTSTRAP_CONF_LEVEL: 0.95
+  RANDOM_SEED: 123456
+  # Clustering
+  CLUSTER_LEVEL: "District_ID"
+  # Instrument specification (distance and squared distance)
+  INSTRUMENT_SPECIFICATION:
+    distance_to_border: 1
+    distance_to_border_sq: 2
+  IV_INTERACTION_WITH_BORDER_DUMMY: false # configurable (Appendix A.2 style)
+  # Distance computation
+  DISTANCE_CALCULATION_METHOD: "great_circle" # or "euclidean" if CRS is projected in meters
+  DISTANCE_UNITS: "km"
+  # Pseudo-panel group definition (Appendix C.5)
+  PSEUDO_PANEL_GROUPS:
+    education:
+      num_groups: 3
+      definition: "No vocational/apprenticeship; Vocational/apprenticeship; University"
+    age:
+      num_groups: 3
+      definition: "<30; 30-50; >50"
+    gender:
+      num_groups: 2
+      definition: "Male; Female"
+  PSEUDO_PANEL_WEIGHT_YEAR: 1990
+  MIN_PSEUDO_PANEL_CELL_SIZE: 10
+  # Part-time to FTE weights (must include full-time code weight 1.0)
+  PART_TIME_EQUIVALENCY_WEIGHTS:
+    1: 1.00 # Full-time
+    5: 0.67 # Part-time (18-30 hrs)
+    6: 0.50 # Part-time (<18 hrs)
+  # Baseline weighting use in municipality-level regressions
+  APPLY_BASELINE_WEIGHTS: true
+  WEIGHT_COLUMN_MUNICIPALITY: "E_native_baseline_1990" # to be constructed from consolidated_df_raw
+  # Age controls for pure wage FD regression on stayers
+  AGE_CONTROLS: ["age", "age_sq"]
+  # Optional FE toggles for robustness (not core to main estimates)
+  INCLUDE_STATE_FE: false
+
+geographic_policy_parameters:
+  # Treated border district IDs
+  TREATED_DISTRICT_IDS:
+    - "09176"
+    - "09272"
+    - "09273"
+    - "09274"
+    - "09275"
+    - "09279"
+    - "09371"
+    - "09372"
+    - "09373"
+    - "09374"
+    - "09375"
+    - "09471"
+    - "09472"
+  # Excluded eligible districts (inner-German contamination)
+  EXCLUDED_BORDER_DISTRICT_IDS:
+    - "09561"
+    - "09562"
+    - "09563"
+    - "09564"
+    - "09571"
+    - "09572"
+    - "09573"
+    - "09574"
+  # Matched control districts (explicit for reproducibility)
+  MATCHED_CONTROL_DISTRICT_IDS: [] # populate with the exact list used in matching
+  # Distance thresholds for eligibility/exclusion (approximate, per the paper)
+  BORDER_REGION_DISTANCE_BAND_KM: 80
+  INNER_GERMAN_BORDER_CONTAMINATION_ZONE_KM: 80
+  # CRS for workplace and border-crossing coordinates
+  CRS_UTM_EPSG: "EPSG:XXXX" # MUST be specified, e.g., "EPSG:32632" for UTM Zone 32N
+
+variable_coding_maps:
+  # Nationality mapping
+  NATIONALITY_MAP:
+    1: "German"
+    2: "Czech"
+    3: "Other_Foreign"
+  NATIONALITY_DEFAULT_OTHER_LABEL: "Other_Foreign"
+  # Gender mapping
+  GENDER_MAP:
+    1: "Male"
+    2: "Female"
+  # Employment type mapping
+  EMPLOYMENT_TYPE_MAP:
+    1: "Full-time"
+    2: "Irregular"
+    3: "Marginal" # note: some IEBs use 3 for Apprenticeship; confirm and adjust
+    4: "Seasonal"
+    5: "Part-time (18-30 hrs)"
+    6: "Part-time (<18 hrs)"
+  # Education mapping
+  EDUCATION_LEVEL_MAP:
+    1: "No Degree"
+    2: "Vocational"
+    3: "High School"
+    4: "University"
+  # Apprenticeship code (explicitly define the code used for Figure 3)
+  APPRENTICESHIP_CODE: 3
+  # Full-time code (for clarity)
+  FULL_TIME_CODE: 1
+
+shock_and_scaling_parameters:
+  # Shock denominator policy
+  SHOCK_DENOMINATOR_DEFINITION: "Total^90_including_natives_and_all_foreigners"
+  SHOCK_DENOMINATOR_YEAR: 1990
+  # c scaling for structural recovery
+  C_ESTIMATION_METHOD: "compute_from_wagebill_vs_employment"
+  C_FIXED_VALUE: null # set to 0.789 only if you opt to fix rather than compute
+
+wage_imputation_parameters:
+  # Right-censoring cap table source
+  RIGHT_CENSORING_CAP_SOURCE: "provided_in_data"
+  # Tobit-style imputation specification (Appendix B.2)
+  IMPUTATION_MODEL: "Tobit"
+  IMPUTATION_GROUPING: ["Gender_Code", "District_ID"]
+  RESIDUAL_DISTRIBUTION: "normal"
+  REPLACE_CENSORED_WITH: "conditional_expectation_E[log_w | log_w >= cap, X]"
+
+selection_bounding_parameters:
+  # Bounds for correlation rho between selection error and time-varying wage shock
+  SELECTION_BOUND_RHO_VALUES: [-1.0, 1.0]
+  # Probit specification for staying among incumbents
+  STAY_PROBIT_SPEC: "Pr(d_ir1=1 | ΔI_r) = Φ(a + b ΔI_r)"
+
+auxiliary_data_artifacts:
+  # Border crossings: indispensable for instrument construction
+  BORDER_CROSSING_TABLE:
+    description: "List of border crossing points on the Czech–German border used to compute Distance_to_Border"
+    schema:
+      Crossing_ID: "object/string"
+      Crossing_Name: "object/string"
+      Coord_X_UTM: "float64"
+      Coord_Y_UTM: "float64"
+    path_or_handle: "path/to/border_crossings.csv"
+  # Social security cap by year (if not denormalized)
+  WAGE_CAP_BY_YEAR_TABLE:
+    description: "Yearly caps for social security right-censoring of wages"
+    schema:
+      Year: "int64"
+      Cap_EUR: "float64"
+    path_or_handle: "path/to/wage_cap_by_year.csv"
+  # Task mapping from BIBB/IAB survey to 3-digit occupations
+  ROUTINE_ABSTRACT_MAPPING:
+    description: "3-digit occupation mapping to routine vs. abstract and abstract intensity"
+    schema:
+      Occupation_Code_3digit: "int64"
+      Routine_or_Abstract_Label: "object/string"
+      Abstract_Intensity: "float64"
+    task_classification_rule: "occupation classified by maximum mean task share"
+    path_or_handle: "path/to/bibb_iab_task_mapping.csv"
+  # Matched control municipalities/districts
+  MATCHED_CONTROLS_LIST:
+    description: "Explicit list of matched control districts/municipalities"
+    schema:
+      District_ID: "object/string"
+      Municipality_ID: "object/string"
+    path_or_handle: "path/to/matched_controls.csv"
