@@ -1,0 +1,76 @@
+﻿# ==============================================================================#
+# requirements.txt
+# 
+# Production-grade dependency specifications for the General Decomposability
+# Toolkit for Auditing the True Human Impact of Localized Economic Shocks
+#
+# This file specifies exact versions to ensure reproducibility across
+# environments and to prevent breaking changes from upstream dependencies.
+#
+# Installation:
+#   pip install -r requirements.txt
+#
+# Python Version Requirement: >=3.9,<3.13
+# ==============================================================================#
+
+# ------------------------------------------------------------------------------
+# Core Scientific Computing Stack
+# ------------------------------------------------------------------------------
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<2.3.0
+
+# ------------------------------------------------------------------------------
+# Econometric and Statistical Modeling Libraries
+# ------------------------------------------------------------------------------
+statsmodels>=0.14.0,<0.15.0
+linearmodels>=5.3,<6.0
+scipy>=1.10.0,<1.15.0
+
+# ------------------------------------------------------------------------------
+# Data Validation and Configuration Management
+# ------------------------------------------------------------------------------
+pydantic>=2.0.0,<3.0.0
+
+# ------------------------------------------------------------------------------
+# Geospatial Analysis
+# ------------------------------------------------------------------------------
+pyproj>=3.5.0,<4.0.0
+
+# ------------------------------------------------------------------------------
+# Visualization
+# ------------------------------------------------------------------------------
+matplotlib>=3.7.0,<4.0.0
+
+# ------------------------------------------------------------------------------
+# Required Dependencies for Formula Interface and Econometric Modeling
+# ------------------------------------------------------------------------------
+patsy>=0.5.3,<0.6.0
+
+# ------------------------------------------------------------------------------
+# Additional Scientific Computing Dependencies
+# ------------------------------------------------------------------------------
+# Required by various statistical and econometric packages
+setuptools>=65.0.0
+
+# ------------------------------------------------------------------------------
+# Optional but Recommended: Performance and Numerical Stability
+# ------------------------------------------------------------------------------
+# Bottleneck provides optimized numerical operations for pandas
+bottleneck>=1.3.7,<2.0.0
+
+# Numexpr accelerates numerical expressions in pandas/NumPy
+numexpr>=2.8.4,<3.0.0
+
+# ------------------------------------------------------------------------------
+# Development and Quality Assurance (Optional - Uncomment if needed)
+# ------------------------------------------------------------------------------
+# pytest>=7.4.0,<8.0.0
+# pytest-cov>=4.1.0,<5.0.0
+# mypy>=1.5.0,<2.0.0
+# black>=23.7.0,<24.0.0
+# flake8>=6.1.0,<7.0.0
+# isort>=5.12.0,<6.0.0
+
+# ------------------------------------------------------------------------------
+# End of requirements.txt
+# ------------------------------------------------------------------------------
